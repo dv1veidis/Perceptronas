@@ -1,14 +1,21 @@
-from random import uniform
+import random
+from random import uniform, shuffle
 import numpy as np
+
 irisResult = []
 irisData = []
 vezioResult = []
 vezioData = []
 weights = []
-bias = 0
+learningSet = []
+learningSetResults = []
+testSet = []
+testSetResults = []
+learningAccuracy = []
+learningErrors = []
 
 epochs = 10
-learningRate = 0.001
+learningRate = 0.0001
 
 def irisuSkaitymas():
     with open('iris.data', 'r') as f:
@@ -16,6 +23,7 @@ def irisuSkaitymas():
         for line in f.read().split("\n"):
             isWrong = 0
             irisTemp= []
+            irisTemp.append(1)
             for x in line.split(","):
                 if x == 'Iris-setosa' or not x:
                     isWrong = 1
@@ -37,21 +45,25 @@ def vezioSkaitymas():
             isfirst = 1
             wrongData = 0
             vezioTemp = []
+            vezioTemp.append(1)
             for x in line.split(","):
                 if isfirst:
                     isfirst = 0
                 else:
-                    vezioTemp.append(float(x))
+                    if x != '?':
+                        vezioTemp.append(float(x))
                 if x == '?' or not x:
                     wrongData = 1
             if not wrongData:
                 vezioData.append(vezioTemp)
         
 def savingIrisResults():
+    shuffle(irisData)
     for data in irisData:
         irisResult.append(data.pop())
 
 def savingVezioResults():
+    shuffle(vezioData)
     for data in vezioData:
         newRes = 0
         if data.pop() == '2':
@@ -61,39 +73,63 @@ def savingVezioResults():
         vezioResult.append(newRes)
         
 def generateWeights(dataChoice):
-    bias = round(uniform(0, 1), 5)
     if dataChoice == '1':
-        for _ in range(4):
-            weights.append(round(uniform(0, 1), 5))
+        for _ in range(5):
+            weights.append(uniform(0, 1))
     else:
-        for _ in range(9):
-            weights.append(round(uniform(0, 1), 5))
+        for _ in range(10):
+            weights.append(uniform(0, 1))
+    print(weights)
 
-def slenkstinisActivation(result, expectedResult):
-    if expectedResult == 1 and result>=0:
-        return 1
-    elif expectedResult == 0 and result<0:
+def slenkstinisActivation(result):
+    if result>=0:
         return 1
     else:
         return 0
 
-def sigmoidinisActivation(result, expectedResult):
+def sigmoidinisActivation(result):
     sigmoid = 1/(1+np.exp(-result))
-    if expectedResult == 1 and sigmoid>=0.5:
-        return 1
-    elif expectedResult == 0 and sigmoid<0.5:
+    if sigmoid>=0.99:
         return 1
     else:
         return 0
 
-def neuronLearning(data, results, activationChoice):
+
+def adeline(w, t, y, x):
+    for i in range(0, len(w)):
+        w[i] = w[i] + learningRate * (t - y) * x[i]
+    return w
+
+def neuronLearning(data, weights, results, activationChoice):
+    learnSetSize = int(len(data) * 80 / 100)
+    learningSet = data[0:learnSetSize]
+    learningSetResults = results[0:learnSetSize]
+    testSet = data[learnSetSize:len(data)]
+    testSetResults = results[learnSetSize:len(results)]
     for _ in range(epochs):
-        for i in data:
-            a = np.dot(data[1], weights)
+        correct = 0
+        error = 0
+        for i in range(len(learningSet)):
+            a = np.dot(learningSet[i], weights)
             if activationChoice == '1':
-                slenkstinisActivation(a, results[i])
+                y = slenkstinisActivation(a)
+                if y == learningSetResults[i]:
+                    correct += 1
+                else:
+                    weights = adeline(weights, learningSetResults[i], y, learningSet[i])
+                error += pow(y - learningSetResults[i], 2)
             elif activationChoice == '2':
-                sigmoidinisActivation(a, results[i])
+                y = sigmoidinisActivation(a)
+                if y == learningSetResults[i]:
+                    correct += 1
+                else:
+                    weights = adeline(weights, learningSetResults[i], y, learningSet[i])
+                    print("I got it wrong")
+                error += pow(y - learningSetResults[i], 2)
+        learningAccuracy.append(100 / len(learningSet) * correct)
+        learningErrors.append(error / 2)
+    # print(learningAccuracy)
+    # print(learningErrors)
 
 
 def main():
@@ -114,7 +150,7 @@ def main():
         print('Wrong choice selection')
     activationChoice = input("Choose Slenkstine(1) or Sigmoidine(2) Activation:")
     if dataChoice == '1' or dataChoice == '2':
-        neuronLearning(data, results, activationChoice)
+        neuronLearning(data, weights, results, activationChoice)
     else:
         print('Wrong choice selection')
 
