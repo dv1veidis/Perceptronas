@@ -7,6 +7,9 @@ vezioData = []
 weights = []
 bias = 0
 
+epochs = 10
+learningRate = 0.001
+
 def irisuSkaitymas():
     with open('iris.data', 'r') as f:
         i = 0
@@ -75,18 +78,22 @@ def slenkstinisActivation(result, expectedResult):
         return 0
 
 def sigmoidinisActivation(result, expectedResult):
-    if expectedResult == 1 and result>=0.5:
+    sigmoid = 1/(1+np.exp(-result))
+    if expectedResult == 1 and sigmoid>=0.5:
         return 1
-    elif expectedResult == 0 and result<0.5:
+    elif expectedResult == 0 and sigmoid<0.5:
         return 1
     else:
         return 0
 
 def neuronLearning(data, results, activationChoice):
-    if activationChoice == '1':
-        slenkstinisActivation()
-    elif activationChoice == '2':
-        sigmoidinisActivation():
+    for _ in range(epochs):
+        for i in data:
+            a = np.dot(data[1], weights)
+            if activationChoice == '1':
+                slenkstinisActivation(a, results[i])
+            elif activationChoice == '2':
+                sigmoidinisActivation(a, results[i])
 
 
 def main():
@@ -108,7 +115,6 @@ def main():
     activationChoice = input("Choose Slenkstine(1) or Sigmoidine(2) Activation:")
     if dataChoice == '1' or dataChoice == '2':
         neuronLearning(data, results, activationChoice)
-        print("Potato")
     else:
         print('Wrong choice selection')
 
