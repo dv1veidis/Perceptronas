@@ -1,8 +1,11 @@
+from random import uniform
 import numpy as np
 irisResult = []
 irisData = []
 vezioResult = []
 vezioData = []
+weights = []
+bias = 0
 
 def irisuSkaitymas():
     with open('iris.data', 'r') as f:
@@ -19,7 +22,7 @@ def irisuSkaitymas():
                     elif x == 'Iris-virginica':
                         irisTemp.append(1)
                     else:
-                        irisTemp.append(x)
+                        irisTemp.append(float(x))
             if not isWrong:
                 irisData.append(irisTemp)
                 i =i + 1
@@ -35,7 +38,7 @@ def vezioSkaitymas():
                 if isfirst:
                     isfirst = 0
                 else:
-                    vezioTemp.append(x)
+                    vezioTemp.append(float(x))
                 if x == '?' or not x:
                     wrongData = 1
             if not wrongData:
@@ -53,14 +56,60 @@ def savingVezioResults():
         else:
             newRes = 1
         vezioResult.append(newRes)
-    print(vezioResult)
         
+def generateWeights(dataChoice):
+    bias = round(uniform(0, 1), 5)
+    if dataChoice == '1':
+        for _ in range(4):
+            weights.append(round(uniform(0, 1), 5))
+    else:
+        for _ in range(9):
+            weights.append(round(uniform(0, 1), 5))
+
+def slenkstinisActivation(result, expectedResult):
+    if expectedResult == 1 and result>=0:
+        return 1
+    elif expectedResult == 0 and result<0:
+        return 1
+    else:
+        return 0
+
+def sigmoidinisActivation(result, expectedResult):
+    if expectedResult == 1 and result>=0.5:
+        return 1
+    elif expectedResult == 0 and result<0.5:
+        return 1
+    else:
+        return 0
+
+def neuronLearning(data, results, activationChoice):
+    if activationChoice == '1':
+        slenkstinisActivation()
+    elif activationChoice == '2':
+        sigmoidinisActivation():
 
 
 def main():
-    irisuSkaitymas()
-    savingIrisResults()
-    vezioSkaitymas()
-    savingVezioResults()
-    
+    dataChoice = input("Choose Irisu(1) or Vezio(2) data:")
+    if dataChoice == "1":
+        irisuSkaitymas()
+        savingIrisResults()
+        generateWeights(dataChoice)
+        data = irisData
+        results = irisResult
+    elif dataChoice == "2":
+        vezioSkaitymas()
+        savingVezioResults()
+        generateWeights(dataChoice)
+        data = vezioData
+        results = vezioResult
+    else:
+        print('Wrong choice selection')
+    activationChoice = input("Choose Slenkstine(1) or Sigmoidine(2) Activation:")
+    if dataChoice == '1' or dataChoice == '2':
+        neuronLearning(data, results, activationChoice)
+        print("Potato")
+    else:
+        print('Wrong choice selection')
+
 main()
