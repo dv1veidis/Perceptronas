@@ -17,7 +17,7 @@ testAccuracy = []
 testErrors = []
 
 epochs = 100
-learningRate = 0.01
+learningRate = 0.001
 
 # Nuskaito ir sutvarko Irisu duomenis
 def irisuSkaitymas():
@@ -185,7 +185,7 @@ def neuronLearning(data, weights, results, activationChoice):
                 else:
                     weights = adeline(weights, learningSetResults[i], y, learningSet[i])
                 # Atlieka paklaidos skaičiavima pakeliant gauta rezulta kvadratu
-                error += pow(y - learningSetResults[i], 2)
+                error += pow((1/(1+np.exp(-a))) - learningSetResults[i], 2)
         # Aprašo epochos tiksluma
         learningAccuracy.append(100 / len(learningSet) * correct)
         # Aprašo epochos paklaida
