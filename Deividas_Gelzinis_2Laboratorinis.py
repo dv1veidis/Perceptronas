@@ -3,6 +3,7 @@ from random import uniform, shuffle
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Aprašomi naudojami masyvai
 irisResult = []
 irisData = []
@@ -19,45 +20,54 @@ testErrors = []
 epochs = 100
 learningRate = 0.001
 
+def irisu_tikrintojas(line):
+    isWrong = 0
+    irisTemp= []
+    irisTemp.append(1)
+    for x in line.split(","):
+        if x == 'Iris-setosa' or not x:
+            isWrong = 1
+        else:
+            if x == 'Iris-versicolor':
+                irisTemp.append(0)
+            elif x == 'Iris-virginica':
+                irisTemp.append(1)
+            else:
+                irisTemp.append(float(x))
+    return isWrong, irisTemp
+    
+
 # Nuskaito ir sutvarko Irisu duomenis
 def irisuSkaitymas():
     with open('iris.data', 'r') as f:
         i = 0
         for line in f.read().split("\n"):
-            isWrong = 0
-            irisTemp= []
-            irisTemp.append(1)
-            for x in line.split(","):
-                if x == 'Iris-setosa' or not x:
-                    isWrong = 1
-                else:
-                    if x == 'Iris-versicolor':
-                        irisTemp.append(0)
-                    elif x == 'Iris-virginica':
-                        irisTemp.append(1)
-                    else:
-                        irisTemp.append(float(x))
+            isWrong, irisTemp = irisu_tikrintojas(line)
             if not isWrong:
                 irisData.append(irisTemp)
                 i =i + 1
+
+def vezio_tikrinimas(line):
+    isfirst = 1
+    wrongData = 0
+    vezioTemp = []
+    vezioTemp.append(1)
+    for x in line.split(","):
+        if isfirst:
+            isfirst = 0
+        else:
+            if x != '?':
+                vezioTemp.append(float(x))
+        if x == '?' or not x:
+            wrongData = 1
+    return wrongData, vezioTemp
 
 # Nuskaito ir sutvarko Vezio duomenis
 def vezioSkaitymas():
     with open('breast-cancer-wisconsin.data', 'r') as f:
         i = 0
         for line in f.read().split("\n"):
-            isfirst = 1
-            wrongData = 0
-            vezioTemp = []
-            vezioTemp.append(1)
-            for x in line.split(","):
-                if isfirst:
-                    isfirst = 0
-                else:
-                    if x != '?':
-                        vezioTemp.append(float(x))
-                if x == '?' or not x:
-                    wrongData = 1
+            wrongData, vezioTemp = vezio_tikrinimas(line)
             if not wrongData:
                 vezioData.append(vezioTemp)
         
@@ -74,14 +84,12 @@ def savingVezioResults():
     print("Vėžio duomenu aibių skaičius: " + str(len(vezioData)))
     for data in vezioData:
         newRes = 0
-        if data.pop() == 2:
-            newRes = 0
-        else:
+        if data.pop() != 2:
             newRes = 1
         vezioResult.append(newRes)
         
 # Sugeneruojami pradiniai svoriai naudojant skaicius nuo 0 iki 1
-def generateWeights(dataChoice):
+def svorio_generavimas(dataChoice):
     if dataChoice == '1':
         for _ in range(5):
             weights.append(uniform(0, 1))
@@ -91,21 +99,19 @@ def generateWeights(dataChoice):
     print(weights)
 
 # Aprašoma slenkstine aktivacija
-def slenkstinisActivation(result):
+def slenkstine_aktivacija(result):
     if result>=0:
         return 1
-    else:
-        return 0
+    return 0
 
 # Aprašoma sigmoidine aktivacija apvalinama nuo 0.7 ir 0.3
-def sigmoidinisActivation(result):
+def sigmoidine_aktivacija(result):
     sigmoid = 1/(1+np.exp(-result))
     if sigmoid>=0.7:
         return 1
     elif sigmoid<=0.3:
         return 0
-    else:
-        return sigmoid
+    return sigmoid
 
 # Aprašoma adeline funkcija svoriu atnaujinimui
 def adeline(w, t, y, x):
@@ -114,7 +120,7 @@ def adeline(w, t, y, x):
     return w
 
 # Nupiešiami tikslumo ir paklaidos duomenis pagal epocha
-def drawResults(learningAccuracy, learningError):
+def draw_results(learningAccuracy, learningError):
     
     plt.plot(range(0,len(learningAccuracy)), learningAccuracy)
     # naming the x axis
@@ -133,18 +139,18 @@ def drawResults(learningAccuracy, learningError):
     plt.show()
 
 # Testuojamas neuronas su galutiniais svoriais
-def neuronTest(weights, testSet, activationChoice, testSetResults):
+def neuron_test(weights, testSet, activationChoice, testSetResults):
     correct = 0
     error = 0
     for i in range(len(testSet)):    
         a = np.dot(testSet[i], weights)
         if activationChoice == '1':
-            y = slenkstinisActivation(a)
+            y = slenkstine_aktivacija(a)
             if y == testSetResults[i]:
                 correct += 1
             error += pow(y - testSetResults[i], 2)
         elif activationChoice == '2':
-            y = sigmoidinisActivation(a)
+            y = sigmoidine_aktivacija(a)
             if y == testSetResults[i]:
                 correct += 1
             error += pow(y - testSetResults[i], 2)
@@ -154,6 +160,15 @@ def neuronTest(weights, testSet, activationChoice, testSetResults):
     testErrors.append(error/2)
     print(testAccuracy)
     print(testErrors)
+
+def error_ieskojimas(error, a, activation_choice, learning_set_results):
+    if activation_choice == '1':
+        y = slenkstine_aktivacija(a)
+        error += pow(y - learning_set_results, 2)
+    elif activation_choice == '2':
+        y = sigmoidine_aktivacija(a)               
+        error += pow((1/(1+np.exp(-a))) - learning_set_results, 2)
+    return error, y
 
 # Apmokomas neuronas naudojant adeline funkcija bei išskaidom duomenis santykiu 80/30
 def neuronLearning(data, weights, results, activationChoice):
@@ -171,27 +186,17 @@ def neuronLearning(data, weights, results, activationChoice):
         for i in range(len(learningSet)):
             # Atlieka 2 vektoriu apjungima i bendra suma
             a = np.dot(learningSet[i], weights)
-            if activationChoice == '1':
-                y = slenkstinisActivation(a)
-                if y == learningSetResults[i]:
-                    correct += 1
-                else:
-                    weights = adeline(weights, learningSetResults[i], y, learningSet[i])
-                error += pow(y - learningSetResults[i], 2)
-            elif activationChoice == '2':
-                y = sigmoidinisActivation(a)
-                if y == learningSetResults[i]:
-                    correct += 1
-                else:
-                    weights = adeline(weights, learningSetResults[i], y, learningSet[i])
-                # Atlieka paklaidos skaičiavima pakeliant gauta rezulta kvadratu
-                error += pow((1/(1+np.exp(-a))) - learningSetResults[i], 2)
+            error, y = error_ieskojimas(error,a, activationChoice, learningSetResults[i])
+            if y == learningSetResults[i]:
+                correct += 1
+            else:
+                weights = adeline(weights, learningSetResults[i], y, learningSet[i])
         # Aprašo epochos tiksluma
         learningAccuracy.append(100 / len(learningSet) * correct)
         # Aprašo epochos paklaida
         learningErrors.append(error / 2)
-    drawResults(learningAccuracy, learningErrors)
-    neuronTest(weights, testSet, activationChoice, testSetResults)
+    draw_results(learningAccuracy, learningErrors)
+    neuron_test(weights, testSet, activationChoice, testSetResults)
 
 # Pagrindine veikimo funkcija
 def main():
@@ -200,13 +205,13 @@ def main():
     if dataChoice == "1":
         irisuSkaitymas()
         savingIrisResults()
-        generateWeights(dataChoice)
+        svorio_generavimas(dataChoice)
         data = irisData
         results = irisResult
     elif dataChoice == "2":
         vezioSkaitymas()
         savingVezioResults()
-        generateWeights(dataChoice)
+        svorio_generavimas(dataChoice)
         data = vezioData
         results = vezioResult
     else:
